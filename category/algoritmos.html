@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="spanish">
+<head>
+        <meta charset="utf-8" />
+        <title>sebacastroh - Algoritmos</title>
+        <link rel="stylesheet" href="https://sebacastroh.github.io/theme/css/main.css" />
+
+        <!--[if IE]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="https://sebacastroh.github.io/">sebacastroh </a></h1>
+                <nav><ul>
+                    <li class="active"><a href="https://sebacastroh.github.io/category/algoritmos.html">Algoritmos</a></li>
+                    <li><a href="https://sebacastroh.github.io/category/metodos-numericos.html">Métodos numéricos</a></li>
+                    <li><a href="https://sebacastroh.github.io/category/programacion-cientifica.html">Programación científica</a></li>
+                </ul>
+                </nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="https://sebacastroh.github.io/ramer-douglas-peucker.html">Ramer-Douglas-Peucker</a></h1>
+<footer class="post-info">
+        <span>jue 19 enero 2017</span>
+
+</footer><!-- /.post-info --><h2>¡Demasiados puntos!</h2>
+<p>Hace un tiempo tuve que leer desde Python unos archivos hechos en <a href="https://es.wikipedia.org/wiki/DWG">AutoCad</a>. Básicamente tuve que extraer la geometría de distintos polígonos para luego continuar mi análisis. Sin embargo, no sospechaba la cantidad de puntos que podían estar contenidos en cada uno de los polígonos. Claramente para un amante del detalle, como yo, era genial tener una información tan precisa. Lamentablemente, el número de puntos era tan grande que mis rutinas se demoraban muchísimo más de lo que podía esperar.</p>
+<p>Si uno observaba la geometría de los polígonos, fácilmente se podía dar cuenta que muchos puntos podrían ser simplificados a través de una recta. Obviamente sería una aproximacion, pero el resultado final no afectaría a mi modelización completa. Para ejemplificar este problema, sin embargo, voy a utilizar la geografía de los países del mundo.</p>
+<p><center>
+<img alt="World Map" src="https://sebacastroh.github.io/images/world_map.svg"></p>
+<p>Los 247 países del mundo. Fuente: <a href="http://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-0-countries/">Natural Earth</a>
+</center></p>
+<h2>Ideas al aire</h2>
+<p>La primera idea que tuve para solucionar este problema fue determinar los ángulos interiores entre cada segmento del polígono e ir eliminando los puntos que estuvieran asociados a un ángulo mayor a un umbral previamente definido. Sin embargo, esta idea tenía el problema de que si eliminaba un punto cambiaría el ángulo de los dos puntos contiguos, lo cual requeriría estar revisando la nueva configuración repetidamente. No es que suene muy difícil, pero antes de implementarlo hay que pensarlo bien.</p>
+<h2>Algo más serio</h2>
+<p>Luego de pensar un poco, me pregunté si existía alguna forma mejor para resolver este problema. Y sí la hay, corresponde al algoritmo <a href="https://es.wikipedia.org/wiki/Algoritmo_de_Ramer%E2%80%93Douglas%E2%80%93Peucker">Ramer-Douglas-Peucker</a>. El algoritmo consiste en reducir de manera recursiva los puntos que caen dentro de un umbral de distancia. Los pasos son los siguientes:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">RDP</span><span class="p">(</span><span class="n">xy</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">):</span>
+<span class="c1">#   1. Considera la recta L definida por el punto inicial y final de xy</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="p">[</span><span class="n">xy</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xy</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+<span class="c1">#   2. Si no hay puntos entre medio del primero y el último, finaliza la </span>
+<span class="c1">#      función retornando los dos puntos.</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">xy</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+          <span class="k">return</span> <span class="n">xy</span>
+<span class="c1">#   3. Si hay más puntos, calcula la distancia de cada punto interior con la </span>
+<span class="c1">#      recta L (distancia punto-recta) e identifica el punto</span>
+<span class="c1">#      que tenga la mayor distancia, d_max.</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">d_max</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xy</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">):</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">distancia_punto_recta</span><span class="p">(</span><span class="n">xy</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">L</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;</span> <span class="n">d_max</span><span class="p">:</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="n">d_max</span> <span class="o">=</span> <span class="n">d</span>
+<span class="c1">#   4. Si d_max es menor que epsilon, se finaliza la función retornando sólo </span>
+<span class="c1">#      los puntos inicial y final (es decir, descartamos todos los puntos </span>
+<span class="c1">#      interiores).</span>
+        <span class="k">if</span> <span class="n">d_max</span> <span class="o">&lt;=</span> <span class="n">epsilon</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">xy</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+<span class="c1">#   5. En cambio, si d_max es mayor que epsilon, el set de puntos se divide </span>
+<span class="c1">#      en dos: uno desde el punto inicial hasta el asociado a d_max y otro </span>
+<span class="c1">#      desde el mismo punto hasta el final. Luego se hacen dos llamados a </span>
+<span class="c1">#      RDP, uno con cada sub set recién definidos. Finalizamos la función </span>
+<span class="c1">#      juntando el resultado de cada llamado a RDP y entregando eso como </span>
+<span class="c1">#      salida final.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sub_set_1</span> <span class="o">=</span> <span class="n">RDP</span><span class="p">(</span><span class="n">xy</span><span class="p">[:</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">epsilon</span><span class="p">)</span>
+            <span class="n">sub_set_2</span> <span class="o">=</span> <span class="n">RDP</span><span class="p">(</span><span class="n">xy</span><span class="p">[</span><span class="n">index</span><span class="p">:],</span> <span class="n">epsilon</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">sub_set_1</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">sub_set_2</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+</pre></div>
+
+
+<p>Primero que todo quiero decir que el algoritmo me ha parecido genial. Cuando lo entiendes y ves lo simple que es, pero al mismo tiempo te preguntas cómo no se te ocurrió antes, te das cuenta lo bien que está hecho. Una demostración gráfica del algoritmo, paso a paso, se puede ver en esta animación que está disponible en el artículo de Wikipedia.
+<center>
+<img alt="RDP_animation" src="https://sebacastroh.github.io/images/Ramer-Douglas-Peucker_animated.gif"></p>
+<p><em>Animación del algoritmo Ramer-Douglas-Peucker. Figura hecha por <a href="https://en.wikipedia.org/wiki/User:Mysid">Mysid</a>, distribuída bajo la licencia <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a></em>
+</center>
+Es importante notar que el algoritmo fija dos puntos que jamás serán descartados: el inicial y el final. Esto porque la división de puntos siempre elimina los puntos interiores, pero nunca los extremos. En el caso de una línea es lo lógico, pero en un polígono cerrado el resultado final dependerá de cuáles son estos dos puntos.</p>
+<h2>Implementación en Python</h2>
+<p>En este caso el pseudo código quedó practicamente listo para usar en Python. Sólo faltaría definir la función <code>distancia_punto_recta</code>. Sin embargo, deseo dejar una versión iterativa del código en vez de la recursiva. En otra entrada discutiré sobre la transformación de algoritmos recursivos a iterativos, de momento sólo dejaré este código que compartí con la librería <a href="https://github.com/fhirschmann/rdp">rdp</a> que pueden instalar utilizando el comando <code>pip install rdp</code>.</p>
+<div class="highlight"><pre><span></span><span class="c1"># Librerías necesarias</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c1"># Distancia punto-recta</span>
+<span class="k">def</span> <span class="nf">PointLineDistance</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span> <span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">point</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">((</span><span class="n">end</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">start</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">start</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="p">(</span><span class="n">start</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">end</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">start</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">((</span><span class="n">end</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">start</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">end</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">start</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">(</span><span class="n">end</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">start</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">end</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">start</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">n</span><span class="o">/</span><span class="n">d</span>
+
+<span class="c1"># Algoritmo de Ramer-Douglas-Peucker iterativo (local)</span>
+<span class="k">def</span> <span class="nf">_RamerDouglasPeucker</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">startIndex</span><span class="p">,</span> <span class="n">lastIndex</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">):</span>
+    <span class="n">stk</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">stk</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">startIndex</span><span class="p">,</span> <span class="n">lastIndex</span><span class="p">])</span>
+    <span class="n">globalStartIndex</span> <span class="o">=</span> <span class="n">startIndex</span>
+    <span class="n">bitArray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">lastIndex</span><span class="o">-</span><span class="n">startIndex</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">stk</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">startIndex</span> <span class="o">=</span> <span class="n">stk</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">lastIndex</span> <span class="o">=</span> <span class="n">stk</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">stk</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="n">dmax</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">startIndex</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">lastIndex</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">bitArray</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">globalStartIndex</span><span class="p">]:</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">PointLineDistance</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">points</span><span class="p">[</span><span class="n">startIndex</span><span class="p">],</span> <span class="n">points</span><span class="p">[</span><span class="n">lastIndex</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;</span> <span class="n">dmax</span><span class="p">:</span>
+                    <span class="n">index</span> <span class="o">=</span> <span class="n">i</span>
+                    <span class="n">dmax</span> <span class="o">=</span> <span class="n">d</span>
+        <span class="k">if</span> <span class="n">dmax</span> <span class="o">&gt;</span> <span class="n">epsilon</span><span class="p">:</span>
+            <span class="n">stk</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">startIndex</span><span class="p">,</span> <span class="n">index</span><span class="p">])</span>
+            <span class="n">stk</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">index</span><span class="p">,</span> <span class="n">lastIndex</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">startIndex</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">lastIndex</span><span class="p">):</span>
+                <span class="n">bitArray</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">globalStartIndex</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="n">bitArray</span>
+
+<span class="c1"># Algoritmo de Ramer-Douglas-Peucker iterativo</span>
+<span class="k">def</span> <span class="nf">RamerDouglasPeucker</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">):</span>
+    <span class="n">bitArray</span> <span class="o">=</span> <span class="n">_RamerDouglasPeucker</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">)</span>
+    <span class="n">resList</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">bitArray</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="n">resList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">resList</span><span class="p">)</span>
+</pre></div>
+
+
+<p>La ventaja de este código es que trabaja con arreglos de <a href="http://www.numpy.org/">NumPy</a>, además que acepta arreglos en que el primer y el último punto sean el mismo (hay gente que le gusta definir así los polígonos...). Además nos evitamos los problemas de memoria que puede generar un código recursivo. A continuación dejo algunos resultados que muestran la efectividad del algoritmo.</p>
+<p><center>
+<img alt="Chile" src="https://sebacastroh.github.io/images/chile_comparison.svg">
+</center></p>                </article>
+<p class="paginator">
+    Page 1 / 1
+</p>
+            </aside><!-- /#featured -->
+            </ol><!-- /#posts-list -->
+            </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>blogroll</h2>
+                        <ul>
+                            <li><a href="http://getpelican.com/">Pelican</a></li>
+                            <li><a href="http://python.org/">Python.org</a></li>
+                            <li><a href="http://jinja.pocoo.org/">Jinja2</a></li>
+                            <li><a href="#">You can modify those links in your config file</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="#">You can add links in your config file</a></li>
+                            <li><a href="#">Another social link</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <p>Powered by <a href="http://getpelican.com/">Pelican</a>. Theme <a href="https://github.com/blueicefield/pelican-blueidea/">blueidea</a>, inspired by the default theme.</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
